@@ -4,6 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.ui.Modifier
 import com.example.innotechproject.ui.theme.InnoTechProjectTheme
 
 class MainActivity : ComponentActivity() {
@@ -15,32 +19,40 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // Initialize permission and bluetooth helpers
         permissionHelper = PermissionHelper(this) { granted ->
             if (granted) {
                 bluetoothHelper.checkAndRequestEnabled()
             } else {
-                // handle denied permissions
+                // Permissions denied - app will still show UI but connection will fail
+                // You can show a dialog here if needed
             }
         }
 
         bluetoothHelper = BluetoothHelper(
             activity = this,
-            onEnabled = { startBluetoothWork() },
-            onUnavailable = { /* handle device without BT */ }
+            onEnabled = {
+                // Bluetooth enabled - UI will be ready to use
+            },
+            onUnavailable = {
+                // Device doesn't support Bluetooth - rare case
+            }
         )
 
         setContent {
             InnoTechProjectTheme {
-                // Your UI will go here
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    // Show the car control screen
+                    CarControlScreen(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding)
+                    )
+                }
             }
         }
 
-        // Start permission request
+        // Request permissions when app starts
         permissionHelper.requestPermissions()
-    }
-
-    private fun startBluetoothWork() {
-        // Permissions granted and Bluetooth enabled
-        // You can start scanning/connecting here
     }
 }
