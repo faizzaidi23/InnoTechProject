@@ -33,6 +33,16 @@ class CarControlViewModel(application: Application) : AndroidViewModel(applicati
     private val _selectedDevice = MutableStateFlow<BluetoothDevice?>(null)
     val selectedDevice: StateFlow<BluetoothDevice?> = _selectedDevice.asStateFlow()
 
+    // --- NEW CODE START ---
+    // Holds the slider position (0.0f to 1.0f)
+    private val _sliderPosition = MutableStateFlow(0.5f) // Default to medium speed
+    val sliderPosition: StateFlow<Float> = _sliderPosition.asStateFlow()
+
+    // Holds the last speed character sent
+    private var lastSpeedCommand: Char = '5' // Corresponds to default 0.5f
+    // --- NEW CODE END ---
+
+
     /**
      * Load list of paired devices from Android settings
      */
@@ -75,6 +85,10 @@ class CarControlViewModel(application: Application) : AndroidViewModel(applicati
             if (success) {
                 _isConnected.value = true
                 _statusMessage.value = "Connected to ${device.name ?: device.address}"
+                // --- NEW CODE ---
+                // Send the default speed setting on connect
+                sendSpeedCommand(lastSpeedCommand)
+                // --- NEW CODE END ---
             } else {
                 _isConnected.value = false
                 _statusMessage.value = "Connection failed. Check if device is powered on."
@@ -90,6 +104,57 @@ class CarControlViewModel(application: Application) : AndroidViewModel(applicati
         _isConnected.value = false
         _statusMessage.value = "Disconnected"
     }
+
+    // --- NEW CODE START ---
+    /**
+     * Called when the speed slider changes.
+     * Maps a float (0.0f - 1.0f) to the 11 speed commands ('0' to 'q')
+     */
+    fun onSpeedChanged(position: Float) {
+        _sliderPosition.value = position
+
+        // Map the 0.0f-1.0f float to an int from 0-10
+        val speedStep = (position * 10).toInt()
+
+        val speedChar = when (speedStep) {
+            0 -> '0'
+            1 -> '1'
+            2 -> '2'
+            3 -> '3'
+            4 -> '4'
+            5 -> '5'
+            6 -> '6'
+            7 -> '7'
+            8 -> '8'
+            9 -> '9'
+            10 -> 'q' // Max speed
+            else -> '5' // Default
+        }
+
+        // Only send the command if it's different from the last one
+        if (speedChar != lastSpeedCommand) {
+            lastSpeedCommand = speedChar
+            sendSpeedCommand(speedChar)
+        }
+    }
+
+    /**
+     * Private helper to send just a speed command
+     */
+    private fun sendSpeedCommand(speedChar: Char) {
+        if (!_isConnected.value) return // Don't send if not connected
+
+        viewModelScope.launch {
+            val success = bluetoothManager.sendCommand(speedChar.toString())
+            if (success) {
+                _statusMessage.value = "Speed set to $speedChar"
+            } else {
+                _statusMessage.value = "Failed to send command. Connection lost?"
+                _isConnected.value = false
+            }
+        }
+    }
+    // --- NEW CODE END ---
 
     /**
      * Send command to move car forward
