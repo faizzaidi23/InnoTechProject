@@ -31,25 +31,25 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 @Composable
 fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewModel = viewModel()) {
 
-    // Collect state from ViewModel
+
     val pairedDevices by viewModel.pairedDevices.collectAsState()
     val isConnected by viewModel.isConnected.collectAsState()
     val statusMessage by viewModel.statusMessage.collectAsState()
     val selectedDevice by viewModel.selectedDevice.collectAsState()
-    // --- NEW CODE ---
-    val sliderPosition by viewModel.sliderPosition.collectAsState()
-    // --- NEW CODE END ---
 
-    // Show device selector dialog
+    val sliderPosition by viewModel.sliderPosition.collectAsState()
+
+
+
     var showDeviceDialog by remember { mutableStateOf(false) }
 
-    // Load paired devices when screen opens
+
     LaunchedEffect(Unit) {
         viewModel.loadPairedDevices()
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
@@ -58,7 +58,7 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
 
         // Header
         Text(
-            text = "🚗 ESP32 Car Control",
+            text = "ESP32 Car Control",
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary,
@@ -90,7 +90,7 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
                     Icon(Icons.Default.Settings, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = try { selectedDevice?.name ?: "Select Device" } catch (e: SecurityException) { "Select Device" },
+                        text = try { selectedDevice?.name ?: "Select Device" } catch (_: SecurityException) { "Select Device" },
                         fontSize = 16.sp
                     )
                 }
