@@ -90,7 +90,7 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
                         disabledContentColor = Color.White
                     )
                 ) {
-                    Icon(Icons.Default.Settings, contentDescription = null)
+
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = try { selectedDevice?.name ?: "Select Device" } catch (e: SecurityException) { "Select Device" },
@@ -118,10 +118,7 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
                     ),
                     enabled = selectedDevice != null
                 ) {
-                    Icon(
-                        if (isConnected) Icons.Default.Close else Icons.Default.Check,
-                        contentDescription = null
-                    )
+
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = if (isConnected) "Disconnect" else "Connect",
