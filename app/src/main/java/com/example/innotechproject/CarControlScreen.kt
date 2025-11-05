@@ -55,7 +55,7 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
 
         // Header
         Text(
-            text = "🚗 ESP32 Car Control",
+            text = " Car Controler",
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary,
