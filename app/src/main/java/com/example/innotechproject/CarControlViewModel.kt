@@ -60,8 +60,8 @@ class CarControlViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    /**
-     * Select a device to connect to
+    /*
+        selecting a device to connect to
      */
     fun selectDevice(device: BluetoothDevice) {
         _selectedDevice.value = device

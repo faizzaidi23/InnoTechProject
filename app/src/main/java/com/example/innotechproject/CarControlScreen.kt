@@ -58,7 +58,7 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
 
         // Header
         Text(
-            text = "ESP32 Car Control",
+            text = " Car Controller",
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary,
@@ -138,9 +138,9 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
 
         // Control Panel (only enabled when connected)
         if (isConnected) {
-            // --- MODIFIED LINE ---
+
             ControlPanel(viewModel, sliderPosition)
-            // --- MODIFIED LINE ---
+
         } else {
             // Show placeholder when not connected
             Card(
@@ -193,7 +193,7 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
  * D-pad style layout: Forward, Back, Left, Right, Stop
  */
 @Composable
-// --- MODIFIED LINE (added sliderPosition) ---
+
 fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -221,12 +221,12 @@ fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
             )
-            Slider(
-                value = sliderPosition,
-                onValueChange = { viewModel.onSpeedChanged(it) },
-                modifier = Modifier.padding(horizontal = 16.dp),
-                steps = 9 // This creates 11 steps (0 to 10)
-            )
+//            Slider(
+//                value = sliderPosition,
+//                onValueChange = { viewModel.onSpeedChanged(it) },
+//                modifier = Modifier.padding(horizontal = 16.dp),
+//                steps = 9 // This creates 11 steps (0 to 10)
+//            )
             Spacer(Modifier.height(24.dp))
             // --- NEW CODE END ---
 
