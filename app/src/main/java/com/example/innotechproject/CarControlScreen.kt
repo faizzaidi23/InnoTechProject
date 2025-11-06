@@ -27,7 +27,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 
 /**
- * Main screen for car control
+ * Main screen for cargi control
  * Shows device selection and control buttons
  */
 @Composable
