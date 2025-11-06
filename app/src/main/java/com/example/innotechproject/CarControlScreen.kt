@@ -3,6 +3,7 @@ package com.example.innotechproject
 import android.bluetooth.BluetoothDevice
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -191,9 +193,9 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
 /**
  * Control panel with directional buttons
  * D-pad style layout: Forward, Back, Left, Right, Stop
+ * Buttons use press/hold functionality - car moves while button is held
  */
 @Composable
-
 fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -215,27 +217,19 @@ fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
                 modifier = Modifier.padding(bottom = 24.dp)
             )
 
-            // --- NEW CODE START ---
             Text(
-                text = "Speed Control",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
+                text = "Hold buttons to move",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
-//            Slider(
-//                value = sliderPosition,
-//                onValueChange = { viewModel.onSpeedChanged(it) },
-//                modifier = Modifier.padding(horizontal = 16.dp),
-//                steps = 9 // This creates 11 steps (0 to 10)
-//            )
-            Spacer(Modifier.height(24.dp))
-            // --- NEW CODE END ---
-
 
             // Forward button (top)
-            ControlButton(
+            HoldControlButton(
                 icon = Icons.Default.KeyboardArrowUp,
                 label = "Forward",
-                onClick = { viewModel.moveForward() },
+                onPress = { viewModel.moveForward() },
+                onRelease = { viewModel.stop() },
                 modifier = Modifier.size(80.dp)
             )
 
@@ -246,10 +240,11 @@ fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ControlButton(
+                HoldControlButton(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     label = "Left",
-                    onClick = { viewModel.turnLeft() },
+                    onPress = { viewModel.turnLeft() },
+                    onRelease = { viewModel.stop() },
                     modifier = Modifier.size(80.dp)
                 )
 
@@ -261,10 +256,11 @@ fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
                     containerColor = Color(0xFFF44336)
                 )
 
-                ControlButton(
+                HoldControlButton(
                     icon = Icons.AutoMirrored.Filled.ArrowForward,
                     label = "Right",
-                    onClick = { viewModel.turnRight() },
+                    onPress = { viewModel.turnRight() },
+                    onRelease = { viewModel.stop() },
                     modifier = Modifier.size(80.dp)
                 )
             }
@@ -272,10 +268,11 @@ fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
             Spacer(Modifier.height(16.dp))
 
             // Backward button (bottom)
-            ControlButton(
+            HoldControlButton(
                 icon = Icons.Default.KeyboardArrowDown,
                 label = "Backward",
-                onClick = { viewModel.moveBackward() },
+                onPress = { viewModel.moveBackward() },
+                onRelease = { viewModel.stop() },
                 modifier = Modifier.size(80.dp)
             )
         }
@@ -283,7 +280,68 @@ fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
 }
 
 /**
- * Reusable control button component
+ * Hold-to-move control button component
+ * Sends command when pressed and stop command when released
+ */
+@Composable
+fun HoldControlButton(
+    icon: ImageVector,
+    label: String,
+    onPress: () -> Unit,
+    onRelease: () -> Unit,
+    modifier: Modifier = Modifier,
+    containerColor: Color = Color.Black
+) {
+    // Track if button is currently pressed
+    var isPressed by remember { mutableStateOf(false) }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Surface(
+            modifier = modifier
+                .clip(CircleShape)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onPress = {
+                            // Button pressed down
+                            isPressed = true
+                            onPress()
+                            // Wait for button release
+                            tryAwaitRelease()
+                            // Button released
+                            isPressed = false
+                            onRelease()
+                        }
+                    )
+                },
+            color = if (isPressed) containerColor.copy(alpha = 0.7f) else containerColor,
+            shadowElevation = if (isPressed) 2.dp else 4.dp
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    modifier = Modifier.size(40.dp),
+                    tint = Color.White
+                )
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = Color.Black,
+            fontWeight = if (isPressed) FontWeight.Bold else FontWeight.Normal
+        )
+    }
+}
+
+/**
+ * Reusable control button component (for Stop button - single click)
  */
 @Composable
 fun ControlButton(
@@ -291,7 +349,7 @@ fun ControlButton(
     label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.primary
+    containerColor: Color = Color.Black
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -318,7 +376,7 @@ fun ControlButton(
         Text(
             text = label,
             fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onBackground
+            color = Color.Black
         )
     }
 }
