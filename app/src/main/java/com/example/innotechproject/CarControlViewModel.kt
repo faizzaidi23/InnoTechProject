@@ -197,6 +197,30 @@ class CarControlViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     /**
+     * Set servo motor angle (0-180 degrees)
+     * Maps angle to characters 'a' through 'j'
+     */
+    fun setServoAngle(angle: Float) {
+        _sliderPosition.value = angle
+
+        // Map angle (0-180) to characters a-j
+        val angleChar = when {
+            angle <= 18f -> 'a'  // 0°
+            angle <= 36f -> 'b'  // 20°
+            angle <= 54f -> 'c'  // 40°
+            angle <= 72f -> 'd'  // 60°
+            angle <= 90f -> 'e'  // 80°
+            angle <= 108f -> 'f' // 100°
+            angle <= 126f -> 'g' // 120°
+            angle <= 144f -> 'h' // 140°
+            angle <= 162f -> 'i' // 160°
+            else -> 'j'          // 180°
+        }
+
+        sendCommand(angleChar.toString(), "Servo angle: ${angle.toInt()}°")
+    }
+
+    /**
      * Helper function to send any command
      */
     private fun sendCommand(command: String, message: String) {
