@@ -197,14 +197,11 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
 }
 
 /**
- * Control panel with directional buttons
- * D-pad style layout: Forward, Back, Left, Right, Stop
- * Buttons use press/hold functionality - car moves while button is held
+ * Control panel with directional buttons and servo control
+ * Compact layout - everything visible without scrolling
  */
 @Composable
 fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
-    val scrollState = rememberScrollState()
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -216,93 +213,134 @@ fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(scrollState)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxSize()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
+            // Title
             Text(
                 text = "Car Controls",
-                fontSize = 20.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF00BCD4), // Vibrant Cyan
-                modifier = Modifier.padding(bottom = 12.dp)
+                color = Color(0xFF00BCD4),
+                modifier = Modifier.padding(bottom = 4.dp)
             )
 
-            Text(
-                text = "Hold buttons to move",
-                fontSize = 12.sp,
-                color = Color.Black.copy(alpha = 0.7f),
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-
-            // Forward button (top)
-            HoldControlButton(
-                icon = Icons.Default.KeyboardArrowUp,
-                label = "Forward",
-                onPress = { viewModel.moveForward() },
-                onRelease = { viewModel.stop() },
-                modifier = Modifier.size(65.dp),
-                containerColor = Color(0xFF2196F3) // Vibrant Blue
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            // Left, Stop, Right (middle row)
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
+            // Movement Controls - Compact
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Forward button (top)
                 HoldControlButton(
-                    icon = Icons.AutoMirrored.Filled.ArrowBack,
-                    label = "Left",
-                    onPress = { viewModel.turnLeft() },
+                    icon = Icons.Default.KeyboardArrowUp,
+                    label = "Forward",
+                    onPress = { viewModel.moveForward() },
                     onRelease = { viewModel.stop() },
-                    modifier = Modifier.size(65.dp),
-                    containerColor = Color(0xFF9C27B0) // Vibrant Purple
+                    modifier = Modifier.size(55.dp),
+                    containerColor = Color(0xFF2196F3)
                 )
 
-                ControlButton(
-                    icon = Icons.Default.Close,
-                    label = "Stop",
-                    onClick = { viewModel.stop() },
-                    modifier = Modifier.size(65.dp),
-                    containerColor = Color(0xFFF44336) // Vibrant Red
-                )
+                Spacer(Modifier.height(8.dp))
 
+                // Left, Stop, Right (middle row)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    HoldControlButton(
+                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        label = "Left",
+                        onPress = { viewModel.turnLeft() },
+                        onRelease = { viewModel.stop() },
+                        modifier = Modifier.size(55.dp),
+                        containerColor = Color(0xFF9C27B0)
+                    )
+
+                    ControlButton(
+                        icon = Icons.Default.Close,
+                        label = "Stop",
+                        onClick = { viewModel.stop() },
+                        modifier = Modifier.size(55.dp),
+                        containerColor = Color(0xFFF44336)
+                    )
+
+                    HoldControlButton(
+                        icon = Icons.AutoMirrored.Filled.ArrowForward,
+                        label = "Right",
+                        onPress = { viewModel.turnRight() },
+                        onRelease = { viewModel.stop() },
+                        modifier = Modifier.size(55.dp),
+                        containerColor = Color(0xFF9C27B0)
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                // Backward button (bottom)
                 HoldControlButton(
-                    icon = Icons.AutoMirrored.Filled.ArrowForward,
-                    label = "Right",
-                    onPress = { viewModel.turnRight() },
+                    icon = Icons.Default.KeyboardArrowDown,
+                    label = "Backward",
+                    onPress = { viewModel.moveBackward() },
                     onRelease = { viewModel.stop() },
-                    modifier = Modifier.size(65.dp),
-                    containerColor = Color(0xFF9C27B0) // Vibrant Purple
+                    modifier = Modifier.size(55.dp),
+                    containerColor = Color(0xFFFF9800)
                 )
             }
 
-            Spacer(Modifier.height(12.dp))
-
-            // Backward button (bottom)
-            HoldControlButton(
-                icon = Icons.Default.KeyboardArrowDown,
-                label = "Backward",
-                onPress = { viewModel.moveBackward() },
-                onRelease = { viewModel.stop() },
-                modifier = Modifier.size(65.dp),
-                containerColor = Color(0xFFFF9800) // Vibrant Orange
+            // Divider
+            HorizontalDivider(
+                color = Color(0xFF00BCD4).copy(alpha = 0.3f),
+                modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            Spacer(Modifier.height(20.dp))
+            // Servo Control Section - Compact
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Servo: ${sliderPosition.toInt()}°",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
 
-            HorizontalDivider(color = Color(0xFF00BCD4).copy(alpha = 0.3f), modifier = Modifier.padding(vertical = 8.dp))
+                Slider(
+                    value = sliderPosition,
+                    onValueChange = { viewModel.setServoAngle(it) },
+                    valueRange = 0f..180f,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = SliderDefaults.colors(
+                        thumbColor = Color(0xFF00BCD4),
+                        activeTrackColor = Color(0xFF00BCD4)
+                    )
+                )
 
-            // Servo Control Section
-            ServoControl(
-                angle = sliderPosition,
-                onAngleChange = { viewModel.setServoAngle(it) }
-            )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("0°", fontSize = 11.sp, color = Color.Black.copy(alpha = 0.6f))
+                    Text("90°", fontSize = 11.sp, color = Color.Black.copy(alpha = 0.6f))
+                    Text("180°", fontSize = 11.sp, color = Color.Black.copy(alpha = 0.6f))
+                }
 
-            Spacer(Modifier.height(16.dp)) // Extra space at bottom
+                Spacer(Modifier.height(6.dp))
+
+                // Quick angle buttons - Compact
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    QuickAngleButton("0°", 0f) { viewModel.setServoAngle(it) }
+                    QuickAngleButton("45°", 45f) { viewModel.setServoAngle(it) }
+                    QuickAngleButton("90°", 90f) { viewModel.setServoAngle(it) }
+                    QuickAngleButton("135°", 135f) { viewModel.setServoAngle(it) }
+                    QuickAngleButton("180°", 180f) { viewModel.setServoAngle(it) }
+                }
+            }
         }
     }
 }
@@ -377,13 +415,15 @@ fun ServoControl(
 fun QuickAngleButton(label: String, angle: Float, onClick: (Float) -> Unit) {
     Button(
         onClick = { onClick(angle) },
-        modifier = Modifier.size(width = 60.dp, height = 40.dp),
+        modifier = Modifier
+            .width(55.dp)
+            .height(32.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Black
+            containerColor = Color(0xFF00BCD4)
         ),
-        contentPadding = PaddingValues(4.dp)
+        contentPadding = PaddingValues(2.dp)
     ) {
-        Text(label, fontSize = 11.sp, color = Color.White)
+        Text(label, fontSize = 10.sp, color = Color.White)
     }
 }
 
