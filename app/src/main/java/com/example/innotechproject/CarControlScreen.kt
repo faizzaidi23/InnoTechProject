@@ -7,9 +7,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -19,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -29,43 +28,46 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 
 /**
- * Main screen for cargi control
+ * Main screen for car control
  * Shows device selection and control buttons
  */
 @Composable
 fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewModel = viewModel()) {
-
 
     val pairedDevices by viewModel.pairedDevices.collectAsState()
     val isConnected by viewModel.isConnected.collectAsState()
     val statusMessage by viewModel.statusMessage.collectAsState()
     val selectedDevice by viewModel.selectedDevice.collectAsState()
 
-    val sliderPosition by viewModel.sliderPosition.collectAsState()
-
-
-
     var showDeviceDialog by remember { mutableStateOf(false) }
-
 
     LaunchedEffect(Unit) {
         viewModel.loadPairedDevices()
     }
 
+    // Vibrant gradient background
+    val gradientBrush = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xFF0F2027),  // Dark blue-grey
+            Color(0xFF203A43),  // Medium blue
+            Color(0xFF2C5364)   // Lighter blue
+        )
+    )
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(gradientBrush)
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
         // Header
         Text(
-            text = "Car Controller",
+            text = "🚗 Car Controller",
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black,
+            color = Color.White,
             modifier = Modifier.padding(vertical = 16.dp)
         )
 
@@ -76,9 +78,9 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
                 .padding(vertical = 8.dp),
             colors = CardDefaults.cardColors(
                 containerColor = if (isConnected)
-                    Color(0xFF4CAF50).copy(alpha = 0.1f)
+                    Color(0xFF4CAF50).copy(alpha = 0.2f)
                 else
-                    Color(0xFFF5F5F5)
+                    Color.White.copy(alpha = 0.1f)
             )
         ) {
             Column(
@@ -90,7 +92,10 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
                     onClick = { showDeviceDialog = true },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isConnected,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF00ACC1),
+                        disabledContainerColor = Color.Gray
+                    )
                 ) {
                     Icon(Icons.Default.Settings, contentDescription = null, tint = Color.White)
                     Spacer(Modifier.width(8.dp))
@@ -112,9 +117,9 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isConnected)
-                            Color(0xFFF44336)
+                            Color(0xFFE53935)
                         else
-                            Color.Black
+                            Color(0xFF43A047)
                     ),
                     enabled = selectedDevice != null
                 ) {
@@ -136,7 +141,7 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
                 Text(
                     text = statusMessage,
                     fontSize = 14.sp,
-                    color = if (isConnected) Color(0xFF4CAF50) else Color.Black.copy(alpha = 0.7f),
+                    color = if (isConnected) Color(0xFF66BB6A) else Color.White.copy(alpha = 0.8f),
                     modifier = Modifier.padding(4.dp)
                 )
             }
@@ -146,9 +151,7 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
 
         // Control Panel (only enabled when connected)
         if (isConnected) {
-
-            ControlPanel(viewModel, sliderPosition)
-
+            ControlPanel(viewModel)
         } else {
             // Show placeholder when not connected
             Card(
@@ -156,7 +159,7 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
                     .fillMaxWidth()
                     .weight(1f),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFF5F5F5)
+                    containerColor = Color.White.copy(alpha = 0.1f)
                 )
             ) {
                 Box(
@@ -168,12 +171,13 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
                             Icons.Default.Warning,
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
-                            tint = Color.Black.copy(alpha = 0.5f)
+                            tint = Color.White.copy(alpha = 0.7f)
                         )
                         Spacer(Modifier.height(16.dp))
                         Text(
                             text = "Connect to ESP32 to control the car",
-                            color = Color.Black.copy(alpha = 0.7f)
+                            color = Color.White.copy(alpha = 0.9f),
+                            fontSize = 16.sp
                         )
                     }
                 }
@@ -197,37 +201,44 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
 }
 
 /**
- * Control panel with directional buttons and servo control
- * Compact layout - everything visible without scrolling
+ * Control panel with directional buttons only
+ * Clean, centered layout
  */
 @Composable
-fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
+fun ControlPanel(viewModel: CarControlViewModel) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight(),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = Color.White.copy(alpha = 0.15f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.Center
         ) {
             // Title
             Text(
-                text = "Car Controls",
-                fontSize = 18.sp,
+                text = "🎮 Car Controls",
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF00BCD4),
-                modifier = Modifier.padding(bottom = 4.dp)
+                color = Color.White,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Movement Controls - Compact
+            Text(
+                text = "Hold buttons to move",
+                fontSize = 14.sp,
+                color = Color.White.copy(alpha = 0.8f),
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
+
+            // Movement Controls
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -237,15 +248,15 @@ fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
                     label = "Forward",
                     onPress = { viewModel.moveForward() },
                     onRelease = { viewModel.stop() },
-                    modifier = Modifier.size(55.dp),
-                    containerColor = Color(0xFF2196F3)
+                    modifier = Modifier.size(80.dp),
+                    containerColor = Color(0xFF2196F3) // Blue
                 )
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(16.dp))
 
                 // Left, Stop, Right (middle row)
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     HoldControlButton(
@@ -253,16 +264,16 @@ fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
                         label = "Left",
                         onPress = { viewModel.turnLeft() },
                         onRelease = { viewModel.stop() },
-                        modifier = Modifier.size(55.dp),
-                        containerColor = Color(0xFF9C27B0)
+                        modifier = Modifier.size(80.dp),
+                        containerColor = Color(0xFF9C27B0) // Purple
                     )
 
                     ControlButton(
                         icon = Icons.Default.Close,
                         label = "Stop",
                         onClick = { viewModel.stop() },
-                        modifier = Modifier.size(55.dp),
-                        containerColor = Color(0xFFF44336)
+                        modifier = Modifier.size(80.dp),
+                        containerColor = Color(0xFFF44336) // Red
                     )
 
                     HoldControlButton(
@@ -270,12 +281,12 @@ fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
                         label = "Right",
                         onPress = { viewModel.turnRight() },
                         onRelease = { viewModel.stop() },
-                        modifier = Modifier.size(55.dp),
-                        containerColor = Color(0xFF9C27B0)
+                        modifier = Modifier.size(80.dp),
+                        containerColor = Color(0xFF9C27B0) // Purple
                     )
                 }
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(16.dp))
 
                 // Backward button (bottom)
                 HoldControlButton(
@@ -283,147 +294,11 @@ fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
                     label = "Backward",
                     onPress = { viewModel.moveBackward() },
                     onRelease = { viewModel.stop() },
-                    modifier = Modifier.size(55.dp),
-                    containerColor = Color(0xFFFF9800)
+                    modifier = Modifier.size(80.dp),
+                    containerColor = Color(0xFFFF9800) // Orange
                 )
             }
-
-            // Divider
-            HorizontalDivider(
-                color = Color(0xFF00BCD4).copy(alpha = 0.3f),
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-
-            // Servo Control Section - Compact
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Servo: ${sliderPosition.toInt()}°",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.padding(bottom = 6.dp)
-                )
-
-                Slider(
-                    value = sliderPosition,
-                    onValueChange = { viewModel.setServoAngle(it) },
-                    valueRange = 0f..180f,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = SliderDefaults.colors(
-                        thumbColor = Color(0xFF00BCD4),
-                        activeTrackColor = Color(0xFF00BCD4)
-                    )
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("0°", fontSize = 11.sp, color = Color.Black.copy(alpha = 0.6f))
-                    Text("90°", fontSize = 11.sp, color = Color.Black.copy(alpha = 0.6f))
-                    Text("180°", fontSize = 11.sp, color = Color.Black.copy(alpha = 0.6f))
-                }
-
-                Spacer(Modifier.height(6.dp))
-
-                // Quick angle buttons - Compact
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    QuickAngleButton("0°", 0f) { viewModel.setServoAngle(it) }
-                    QuickAngleButton("45°", 45f) { viewModel.setServoAngle(it) }
-                    QuickAngleButton("90°", 90f) { viewModel.setServoAngle(it) }
-                    QuickAngleButton("135°", 135f) { viewModel.setServoAngle(it) }
-                    QuickAngleButton("180°", 180f) { viewModel.setServoAngle(it) }
-                }
-            }
         }
-    }
-}
-
-/**
- * Servo motor control with slider (0-180 degrees)
- */
-@Composable
-fun ServoControl(
-    angle: Float,
-    onAngleChange: (Float) -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Servo Motor Control",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-
-        Text(
-            text = "Angle: ${angle.toInt()}°",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
-
-        Slider(
-            value = angle,
-            onValueChange = onAngleChange,
-            valueRange = 0f..180f,
-            modifier = Modifier.fillMaxWidth(),
-            colors = SliderDefaults.colors(
-                thumbColor = Color.Black,
-                activeTrackColor = Color.Black
-            )
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text("0°", fontSize = 12.sp, color = Color.Black.copy(alpha = 0.7f))
-            Text("90°", fontSize = 12.sp, color = Color.Black.copy(alpha = 0.7f))
-            Text("180°", fontSize = 12.sp, color = Color.Black.copy(alpha = 0.7f))
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        // Quick angle buttons
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            QuickAngleButton("0°", 0f, onAngleChange)
-            QuickAngleButton("45°", 45f, onAngleChange)
-            QuickAngleButton("90°", 90f, onAngleChange)
-            QuickAngleButton("135°", 135f, onAngleChange)
-            QuickAngleButton("180°", 180f, onAngleChange)
-        }
-    }
-}
-
-@Composable
-fun QuickAngleButton(label: String, angle: Float, onClick: (Float) -> Unit) {
-    Button(
-        onClick = { onClick(angle) },
-        modifier = Modifier
-            .width(55.dp)
-            .height(32.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF00BCD4)
-        ),
-        contentPadding = PaddingValues(2.dp)
-    ) {
-        Text(label, fontSize = 10.sp, color = Color.White)
     }
 }
 
@@ -438,9 +313,8 @@ fun HoldControlButton(
     onPress: () -> Unit,
     onRelease: () -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: Color = Color.Black
+    containerColor: Color = Color(0xFF2196F3)
 ) {
-    // Track if button is currently pressed
     var isPressed by remember { mutableStateOf(false) }
 
     Column(
@@ -452,19 +326,16 @@ fun HoldControlButton(
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onPress = {
-                            // Button pressed down
                             isPressed = true
                             onPress()
-                            // Wait for button release
                             tryAwaitRelease()
-                            // Button released
                             isPressed = false
                             onRelease()
                         }
                     )
                 },
             color = if (isPressed) containerColor.copy(alpha = 0.7f) else containerColor,
-            shadowElevation = if (isPressed) 2.dp else 4.dp
+            shadowElevation = if (isPressed) 2.dp else 8.dp
         ) {
             Box(
                 contentAlignment = Alignment.Center,
@@ -481,8 +352,8 @@ fun HoldControlButton(
         Spacer(Modifier.height(8.dp))
         Text(
             text = label,
-            fontSize = 12.sp,
-            color = Color.Black,
+            fontSize = 13.sp,
+            color = Color.White,
             fontWeight = if (isPressed) FontWeight.Bold else FontWeight.Normal
         )
     }
@@ -497,7 +368,7 @@ fun ControlButton(
     label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: Color = Color.Black
+    containerColor: Color = Color(0xFFF44336)
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -506,7 +377,7 @@ fun ControlButton(
         Surface(
             modifier = modifier.clip(CircleShape),
             color = containerColor,
-            shadowElevation = 4.dp
+            shadowElevation = 8.dp
         ) {
             Box(
                 contentAlignment = Alignment.Center,
@@ -523,8 +394,8 @@ fun ControlButton(
         Spacer(Modifier.height(8.dp))
         Text(
             text = label,
-            fontSize = 12.sp,
-            color = Color.Black
+            fontSize = 13.sp,
+            color = Color.White
         )
     }
 }
@@ -542,13 +413,19 @@ fun DeviceSelectionDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Select ESP32 Device") },
+        title = {
+            Text(
+                "Select ESP32 Device",
+                color = Color(0xFF00ACC1),
+                fontWeight = FontWeight.Bold
+            )
+        },
         text = {
             Column {
                 if (devices.isEmpty()) {
                     Text(
                         "No paired devices found. Please pair your ESP32 in Android Bluetooth settings first.",
-                        color = MaterialTheme.colorScheme.error
+                        color = Color(0xFFE53935)
                     )
                 } else {
                     LazyColumn {
@@ -565,12 +442,12 @@ fun DeviceSelectionDialog(
         },
         confirmButton = {
             TextButton(onClick = onRefresh) {
-                Text("Refresh")
+                Text("Refresh", color = Color(0xFF00ACC1))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text("Cancel", color = Color(0xFF757575))
             }
         }
     )
@@ -592,12 +469,12 @@ fun DeviceListItem(
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected)
-                MaterialTheme.colorScheme.primaryContainer
+                Color(0xFF00ACC1).copy(alpha = 0.2f)
             else
-                MaterialTheme.colorScheme.surface
+                Color.Transparent
         ),
         border = if (isSelected)
-            androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+            androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF00ACC1))
         else null
     ) {
         Row(
@@ -609,28 +486,19 @@ fun DeviceListItem(
             Icon(
                 Icons.Default.Settings,
                 contentDescription = null,
-                tint = if (isSelected)
-                    MaterialTheme.colorScheme.primary
-                else
-                    MaterialTheme.colorScheme.onSurface
+                tint = if (isSelected) Color(0xFF00ACC1) else Color(0xFF757575)
             )
             Spacer(Modifier.width(16.dp))
             Column {
                 Text(
                     text = try { device.name ?: "Unknown Device" } catch (_: SecurityException) { "Unknown Device" },
                     fontWeight = FontWeight.Bold,
-                    color = if (isSelected)
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    else
-                        MaterialTheme.colorScheme.onSurface
+                    color = if (isSelected) Color(0xFF00ACC1) else Color.Black
                 )
                 Text(
                     text = device.address,
                     fontSize = 12.sp,
-                    color = if (isSelected)
-                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                    else
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    color = Color(0xFF757575)
                 )
             }
         }
