@@ -7,7 +7,9 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -201,8 +203,12 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
  */
 @Composable
 fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
+    val scrollState = rememberScrollState()
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
@@ -211,6 +217,7 @@ fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(scrollState)
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -218,7 +225,7 @@ fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
                 text = "Car Controls",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = Color(0xFF00BCD4), // Vibrant Cyan
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
@@ -235,7 +242,8 @@ fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
                 label = "Forward",
                 onPress = { viewModel.moveForward() },
                 onRelease = { viewModel.stop() },
-                modifier = Modifier.size(65.dp)
+                modifier = Modifier.size(65.dp),
+                containerColor = Color(0xFF2196F3) // Vibrant Blue
             )
 
             Spacer(Modifier.height(12.dp))
@@ -250,7 +258,8 @@ fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
                     label = "Left",
                     onPress = { viewModel.turnLeft() },
                     onRelease = { viewModel.stop() },
-                    modifier = Modifier.size(65.dp)
+                    modifier = Modifier.size(65.dp),
+                    containerColor = Color(0xFF9C27B0) // Vibrant Purple
                 )
 
                 ControlButton(
@@ -258,7 +267,7 @@ fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
                     label = "Stop",
                     onClick = { viewModel.stop() },
                     modifier = Modifier.size(65.dp),
-                    containerColor = Color(0xFFF44336)
+                    containerColor = Color(0xFFF44336) // Vibrant Red
                 )
 
                 HoldControlButton(
@@ -266,7 +275,8 @@ fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
                     label = "Right",
                     onPress = { viewModel.turnRight() },
                     onRelease = { viewModel.stop() },
-                    modifier = Modifier.size(65.dp)
+                    modifier = Modifier.size(65.dp),
+                    containerColor = Color(0xFF9C27B0) // Vibrant Purple
                 )
             }
 
@@ -278,18 +288,21 @@ fun ControlPanel(viewModel: CarControlViewModel, sliderPosition: Float) {
                 label = "Backward",
                 onPress = { viewModel.moveBackward() },
                 onRelease = { viewModel.stop() },
-                modifier = Modifier.size(65.dp)
+                modifier = Modifier.size(65.dp),
+                containerColor = Color(0xFFFF9800) // Vibrant Orange
             )
 
             Spacer(Modifier.height(20.dp))
 
-            HorizontalDivider(color = Color.Black.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(color = Color(0xFF00BCD4).copy(alpha = 0.3f), modifier = Modifier.padding(vertical = 8.dp))
 
             // Servo Control Section
             ServoControl(
                 angle = sliderPosition,
                 onAngleChange = { viewModel.setServoAngle(it) }
             )
+
+            Spacer(Modifier.height(16.dp)) // Extra space at bottom
         }
     }
 }
