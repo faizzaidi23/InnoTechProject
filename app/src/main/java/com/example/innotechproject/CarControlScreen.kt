@@ -62,20 +62,20 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        // Header
+        // Header - Smaller
         Text(
             text = "🚗 Car Controller",
-            fontSize = 28.sp,
+            fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,
-            modifier = Modifier.padding(vertical = 16.dp)
+            modifier = Modifier.padding(vertical = 8.dp)
         )
 
-        // Connection Section
+        // Connection Section - Compact
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
+                .padding(vertical = 4.dp),
             colors = CardDefaults.cardColors(
                 containerColor = if (isConnected)
                     Color(0xFF4CAF50).copy(alpha = 0.2f)
@@ -84,70 +84,85 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
             )
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Device selection button
-                Button(
-                    onClick = { showDeviceDialog = true },
+                // Compact connection buttons in a row
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !isConnected,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF00ACC1),
-                        disabledContainerColor = Color.Gray
-                    )
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.Settings, contentDescription = null, tint = Color.White)
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = try { selectedDevice?.name ?: "Select Device" } catch (_: SecurityException) { "Select Device" },
-                        fontSize = 16.sp,
-                        color = Color.White
-                    )
+                    // Device selection button - Compact
+                    Button(
+                        onClick = { showDeviceDialog = true },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isConnected,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF00ACC1),
+                            disabledContainerColor = Color.Gray
+                        ),
+                        contentPadding = PaddingValues(8.dp)
+                    ) {
+                        Icon(Icons.Default.Settings, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = try { selectedDevice?.name ?: "Device" } catch (_: SecurityException) { "Device" },
+                            fontSize = 13.sp,
+                            color = Color.White,
+                            maxLines = 1
+                        )
+                    }
+
+                    // Connect/Disconnect button - Compact
+                    Button(
+                        onClick = {
+                            if (isConnected) viewModel.disconnect()
+                            else viewModel.connect()
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isConnected)
+                                Color(0xFFE53935)
+                            else
+                                Color(0xFF43A047)
+                        ),
+                        enabled = selectedDevice != null,
+                        contentPadding = PaddingValues(8.dp)
+                    ) {
+                        Icon(
+                            if (isConnected) Icons.Default.Close else Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = if (isConnected) "Disconnect" else "Connect",
+                            fontSize = 13.sp,
+                            color = Color.White
+                        )
+                    }
                 }
 
-                Spacer(Modifier.height(12.dp))
-
-                // Connect/Disconnect button
-                Button(
-                    onClick = {
-                        if (isConnected) viewModel.disconnect()
-                        else viewModel.connect()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isConnected)
-                            Color(0xFFE53935)
-                        else
-                            Color(0xFF43A047)
-                    ),
-                    enabled = selectedDevice != null
-                ) {
-                    Icon(
-                        if (isConnected) Icons.Default.Close else Icons.Default.Check,
-                        contentDescription = null,
-                        tint = Color.White
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = if (isConnected) "Disconnect" else "Connect",
-                        fontSize = 16.sp,
-                        color = Color.White
-                    )
-                }
-
-                // Status message
-                Spacer(Modifier.height(12.dp))
+                // Status message - Compact
+                Spacer(Modifier.height(6.dp))
                 Text(
                     text = statusMessage,
-                    fontSize = 14.sp,
+                    fontSize = 11.sp,
                     color = if (isConnected) Color(0xFF66BB6A) else Color.White.copy(alpha = 0.8f),
-                    modifier = Modifier.padding(4.dp)
+                    modifier = Modifier.padding(2.dp),
+                    maxLines = 1
                 )
             }
         }
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(12.dp))
+
+        // Speed Controller Section
+        if (isConnected) {
+            SpeedController(viewModel)
+            Spacer(Modifier.height(12.dp))
+        }
 
         // Control Panel (only enabled when connected)
         if (isConnected) {
@@ -201,6 +216,72 @@ fun CarControlScreen(modifier: Modifier = Modifier, viewModel: CarControlViewMod
 }
 
 /**
+ * Speed Controller with slider (0-100%)
+ */
+@Composable
+fun SpeedController(viewModel: CarControlViewModel) {
+    val sliderPosition by viewModel.sliderPosition.collectAsState()
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White.copy(alpha = 0.15f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "⚡ Speed",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+
+                Text(
+                    text = "${(sliderPosition * 100).toInt()}%",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFFEB3B) // Yellow
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            Slider(
+                value = sliderPosition,
+                onValueChange = { viewModel.onSpeedChanged(it) },
+                valueRange = 0f..1f,
+                modifier = Modifier.fillMaxWidth(),
+                colors = SliderDefaults.colors(
+                    thumbColor = Color(0xFFFFEB3B),
+                    activeTrackColor = Color(0xFFFFEB3B),
+                    inactiveTrackColor = Color.White.copy(alpha = 0.3f)
+                )
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("0%", fontSize = 11.sp, color = Color.White.copy(alpha = 0.6f))
+                Text("50%", fontSize = 11.sp, color = Color.White.copy(alpha = 0.6f))
+                Text("100%", fontSize = 11.sp, color = Color.White.copy(alpha = 0.6f))
+            }
+        }
+    }
+}
+
+/**
  * Control panel with directional buttons only
  * Clean, centered layout
  */
@@ -218,27 +299,12 @@ fun ControlPanel(viewModel: CarControlViewModel) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Title
-            Text(
-                text = "🎮 Car Controls",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
 
-            Text(
-                text = "Hold buttons to move",
-                fontSize = 14.sp,
-                color = Color.White.copy(alpha = 0.8f),
-                modifier = Modifier.padding(bottom = 24.dp)
-            )
-
-            // Movement Controls
+            // Movement Controls - All buttons 90dp
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -248,7 +314,7 @@ fun ControlPanel(viewModel: CarControlViewModel) {
                     label = "Forward",
                     onPress = { viewModel.moveForward() },
                     onRelease = { viewModel.stop() },
-                    modifier = Modifier.size(80.dp),
+                    modifier = Modifier.size(90.dp),
                     containerColor = Color(0xFF2196F3) // Blue
                 )
 
@@ -264,7 +330,7 @@ fun ControlPanel(viewModel: CarControlViewModel) {
                         label = "Left",
                         onPress = { viewModel.turnLeft() },
                         onRelease = { viewModel.stop() },
-                        modifier = Modifier.size(80.dp),
+                        modifier = Modifier.size(90.dp),
                         containerColor = Color(0xFF9C27B0) // Purple
                     )
 
@@ -272,7 +338,7 @@ fun ControlPanel(viewModel: CarControlViewModel) {
                         icon = Icons.Default.Close,
                         label = "Stop",
                         onClick = { viewModel.stop() },
-                        modifier = Modifier.size(80.dp),
+                        modifier = Modifier.size(90.dp),
                         containerColor = Color(0xFFF44336) // Red
                     )
 
@@ -281,20 +347,20 @@ fun ControlPanel(viewModel: CarControlViewModel) {
                         label = "Right",
                         onPress = { viewModel.turnRight() },
                         onRelease = { viewModel.stop() },
-                        modifier = Modifier.size(80.dp),
+                        modifier = Modifier.size(90.dp),
                         containerColor = Color(0xFF9C27B0) // Purple
                     )
                 }
 
                 Spacer(Modifier.height(16.dp))
 
-                // Backward button (bottom)
+                // Backward button (bottom) - SAME SIZE AS OTHERS
                 HoldControlButton(
                     icon = Icons.Default.KeyboardArrowDown,
                     label = "Backward",
                     onPress = { viewModel.moveBackward() },
                     onRelease = { viewModel.stop() },
-                    modifier = Modifier.size(80.dp),
+                    modifier = Modifier.size(90.dp),
                     containerColor = Color(0xFFFF9800) // Orange
                 )
             }
